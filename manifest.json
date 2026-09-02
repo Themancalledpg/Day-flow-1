@@ -1,0 +1,14 @@
+{
+  "name": "Day Flow",
+  "short_name": "Day Flow",
+  "description": "Talk your day into shape — a conversational timeline for tasks, reminders, and follow-through.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#F0F2F9",
+  "theme_color": "#1D1E42",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
