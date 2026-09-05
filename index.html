@@ -703,6 +703,8 @@
 
 <script>
 (function(){
+  const el = (id) => document.getElementById(id);
+
   // ---------- real, permanent storage (this actually persists on a live site) ----------
   // ---------- diagnostics (visible on-screen log to debug the push pipeline) ----------
   const diagLog = el('diagLog');
@@ -754,7 +756,6 @@
   let audioCtx = null;
   let firedReminders = new Set();
 
-  const el = (id) => document.getElementById(id);
   const taskInput = el('taskInput');
   const buildBtn = el('buildBtn');
   const clearBtn = el('clearBtn');
