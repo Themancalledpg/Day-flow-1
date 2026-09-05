@@ -298,6 +298,16 @@
     text-align: center;
   }
   .name-card input:focus{ border-color: var(--dusk); }
+  .name-skip-btn{
+    background: none;
+    border: none;
+    color: var(--ink-soft);
+    font-size: 13px;
+    text-decoration: underline;
+    cursor: pointer;
+    margin-top: 12px;
+    padding: 4px;
+  }
   @keyframes pulse{
     0%{ box-shadow: 0 0 0 0 rgba(232,93,82,0.45); }
     100%{ box-shadow: 0 0 0 10px rgba(232,93,82,0); }
@@ -599,6 +609,7 @@
     <p>I'll use your name when I remind you about things — it feels a lot more like someone's actually got your back.</p>
     <input type="text" id="nameInputField" placeholder="Your first name" maxlength="20">
     <button class="btn-primary" id="nameSubmitBtn" style="width:100%;">Continue</button>
+    <button id="nameSkipBtn" class="name-skip-btn" type="button" onclick="document.getElementById('nameOverlay').classList.add('hidden')">Skip for now</button>
   </div>
 </div>
 
@@ -775,6 +786,7 @@
   const nameOverlay = el('nameOverlay');
   const nameInputField = el('nameInputField');
   const nameSubmitBtn = el('nameSubmitBtn');
+  const nameSkipBtn = el('nameSkipBtn');
   const greetingLabel = el('greetingLabel');
 
   let userName = '';
@@ -812,10 +824,18 @@
   }
 
   nameSubmitBtn.addEventListener('click', () => {
-    const val = nameInputField.value.trim();
-    if(!val) { nameInputField.focus(); return; }
-    nameOverlay.classList.add('hidden'); // close immediately — never let a background save block this
-    saveName(val);
+    try{
+      const val = nameInputField.value.trim();
+      if(!val) { nameInputField.focus(); return; }
+      nameOverlay.classList.add('hidden'); // close immediately — never let a background save block this
+      saveName(val);
+    }catch(e){
+      debugLog('Continue button error: ' + e.message);
+      nameOverlay.classList.add('hidden'); // never let a crash here trap the user
+    }
+  });
+  nameSkipBtn.addEventListener('click', () => {
+    nameOverlay.classList.add('hidden');
   });
   nameInputField.addEventListener('keydown', (e) => {
     if(e.key === 'Enter') nameSubmitBtn.click();
