@@ -792,10 +792,10 @@
     greetingLabel.textContent = userName ? `Hey ${userName}, what's on your plate?` : "Tell me what's on your plate.";
   }
 
-  async function saveName(name){
+  function saveName(name){
     userName = name.trim();
     applyGreeting();
-    try{ await storage.set('dayflow-name', userName); }catch(e){}
+    storage.set('dayflow-name', userName).catch((e) => debugLog('Failed to save name: ' + e.message));
   }
 
   async function loadName(){
@@ -811,11 +811,11 @@
     nameOverlay.classList.remove('hidden');
   }
 
-  nameSubmitBtn.addEventListener('click', async () => {
+  nameSubmitBtn.addEventListener('click', () => {
     const val = nameInputField.value.trim();
     if(!val) { nameInputField.focus(); return; }
-    await saveName(val);
-    nameOverlay.classList.add('hidden');
+    nameOverlay.classList.add('hidden'); // close immediately — never let a background save block this
+    saveName(val);
   });
   nameInputField.addEventListener('keydown', (e) => {
     if(e.key === 'Enter') nameSubmitBtn.click();
