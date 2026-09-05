@@ -1,0 +1,1585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Day Flow — talk your day into shape</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1D1E42">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #F0F2F9;
+    --bg-deep: #E4E8F5;
+    --ink: #14152B;
+    --ink-soft: #565979;
+    --paper: #FFFFFF;
+    --dawn: #E8A836;
+    --midday: #E85D52;
+    --dusk: #7166D9;
+    --night: #1D1E42;
+    --done: #2FA98C;
+    --overdue: #D94A3D;
+    --line: rgba(20,21,43,0.08);
+    --radius: 20px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background: var(--bg);
+    background-image: radial-gradient(circle at 12% -5%, #F7DFAE 0%, transparent 42%),
+                       radial-gradient(circle at 105% 8%, #C7CCF4 0%, transparent 38%);
+    font-family:'Inter', sans-serif;
+    color: var(--ink);
+    display:flex;
+    justify-content:center;
+    min-height:100vh;
+    padding: 40px 14px 60px;
+  }
+  .phone{
+    width:100%;
+    max-width: 410px;
+    background: var(--paper);
+    border-radius: 38px;
+    box-shadow: 0 40px 80px -24px rgba(20,21,43,0.32), 0 1px 0 rgba(255,255,255,0.6) inset;
+    overflow: hidden;
+    display:flex;
+    flex-direction:column;
+    min-height: 680px;
+    border: 1px solid rgba(20,21,43,0.04);
+  }
+  .statusbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding: 14px 26px 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    background: var(--night);
+  }
+  .statusbar .icons{ display:flex; gap:5px; align-items:center; opacity:0.9; }
+  header{
+    padding: 18px 24px 22px;
+    background: linear-gradient(150deg, var(--night) 0%, #35366B 100%);
+    color: #fff;
+    position:relative;
+  }
+  header::after{
+    content:"";
+    position:absolute;
+    left:0; right:0; bottom:-1px;
+    height: 4px;
+    background: linear-gradient(90deg, var(--dawn), var(--midday), var(--dusk));
+  }
+  .brand-row{
+    display:flex;
+    align-items:center;
+    gap: 9px;
+    margin-bottom: 14px;
+  }
+  .brand-mark{
+    width: 26px; height: 26px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, var(--dawn), var(--midday) 55%, var(--dusk));
+    flex-shrink:0;
+  }
+  .brand-name{
+    font-family:'Bricolage Grotesque', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    color: #fff;
+  }
+  h1{
+    font-family:'Bricolage Grotesque', sans-serif;
+    font-weight: 600;
+    font-size: 25px;
+    letter-spacing: -0.015em;
+    margin: 0;
+    line-height:1.2;
+    max-width: 300px;
+  }
+  .today{
+    font-size:13px;
+    color:#AEB2E6;
+    margin-top:8px;
+  }
+
+  .composer{
+    padding: 22px 24px 18px;
+    border-bottom: 1px solid var(--line);
+  }
+  .composer label{
+    display:block;
+    font-size: 13.5px;
+    font-weight:600;
+    margin-bottom: 9px;
+    color: var(--ink-soft);
+  }
+
+  .mode-row{
+    display:flex;
+    gap: 6px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+  .mode-pill{
+    flex: 1 1 auto;
+    min-width: 78px;
+    background: var(--bg);
+    color: var(--ink-soft);
+    border: 1.5px solid var(--line);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 9px 5px;
+    border-radius: 12px;
+    text-align:center;
+    cursor:pointer;
+  }
+  .mode-pill.active{
+    background: var(--ink);
+    color: #fff;
+    border-color: var(--ink);
+  }
+
+  .input-row{
+    position: relative;
+    margin-top: 4px;
+  }
+  .mic-btn{
+    position:absolute;
+    right: 10px;
+    bottom: 10px;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--paper);
+    border: 1.5px solid var(--line);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size: 16px;
+    cursor:pointer;
+    box-shadow: 0 4px 10px -4px rgba(20,21,43,0.2);
+  }
+  .mic-btn.listening{
+    background: var(--midday);
+    border-color: var(--midday);
+    animation: pulse 1s infinite;
+  }
+  .mic-btn:disabled{ opacity: 0.35; cursor: default; }
+  .mic-status{
+    font-size: 12px;
+    color: var(--dusk);
+    font-weight: 600;
+    min-height: 16px;
+    margin-top: 6px;
+    display:flex;
+    align-items:center;
+    gap: 6px;
+  }
+  .mic-status .wave{ display:inline-flex; gap:2px; align-items:flex-end; height:10px; }
+  .mic-status .wave span{
+    width:2.5px; background: var(--dusk); border-radius:2px;
+    animation: wave 0.9s infinite ease-in-out;
+  }
+  .mic-status .wave span:nth-child(2){ animation-delay: .15s; }
+  .mic-status .wave span:nth-child(3){ animation-delay: .3s; }
+  @keyframes wave{
+    0%, 100%{ height:4px; } 50%{ height:11px; }
+  }
+
+  .timetable-box{
+    margin-top: 16px;
+    padding: 14px;
+    border-radius: 16px;
+    border: 1.5px dashed rgba(113,102,217,0.35);
+    background: #F8F7FF;
+  }
+  .timetable-label{
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    margin-bottom: 10px;
+    line-height: 1.4;
+  }
+  .timetable-row{
+    display:flex;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .timetable-row button{ font-size: 12.5px; padding: 9px 12px; flex:1; }
+  .level-input{
+    width:100%;
+    border: 1.5px solid var(--line);
+    border-radius: 12px;
+    padding: 9px 12px;
+    font-family:'Inter', sans-serif;
+    font-size: 13px;
+    color: var(--ink);
+    background: #fff;
+    outline:none;
+    margin-bottom: 10px;
+  }
+  .level-input:focus{ border-color: var(--dusk); }
+  #timetablePaste{
+    width:100%;
+    min-height: 70px;
+    resize: vertical;
+    border: 1.5px solid var(--line);
+    border-radius: 12px;
+    padding: 10px 12px;
+    font-family:'Inter', sans-serif;
+    font-size: 13px;
+    color: var(--ink);
+    background: #fff;
+    outline:none;
+  }
+  .timetable-status{
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--done);
+    margin-top: 8px;
+    min-height: 14px;
+  }
+
+  .name-overlay{
+    position: fixed;
+    inset: 0;
+    background: rgba(20,21,43,0.55);
+    backdrop-filter: blur(3px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 20px;
+  }
+  .name-overlay.hidden{ display:none; }
+  .name-card{
+    background: #fff;
+    border-radius: 24px;
+    padding: 28px 24px;
+    max-width: 340px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 30px 60px -20px rgba(20,21,43,0.4);
+  }
+  .name-mark{
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    margin: 0 auto 16px;
+    background: linear-gradient(135deg, var(--dawn), var(--midday) 55%, var(--dusk));
+  }
+  .name-card h2{
+    font-family:'Bricolage Grotesque', sans-serif;
+    font-size: 20px;
+    margin: 0 0 8px;
+    color: var(--ink);
+  }
+  .name-card p{
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+    margin: 0 0 18px;
+  }
+  .name-card input{
+    width: 100%;
+    border: 1.5px solid var(--line);
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    margin-bottom: 12px;
+    outline: none;
+    text-align: center;
+  }
+  .name-card input:focus{ border-color: var(--dusk); }
+  .name-skip-btn{
+    background: none;
+    border: none;
+    color: var(--ink-soft);
+    font-size: 13px;
+    text-decoration: underline;
+    cursor: pointer;
+    margin-top: 12px;
+    padding: 4px;
+  }
+  @keyframes pulse{
+    0%{ box-shadow: 0 0 0 0 rgba(232,93,82,0.45); }
+    100%{ box-shadow: 0 0 0 10px rgba(232,93,82,0); }
+  }
+  textarea{
+    width:100%;
+    min-height: 100px;
+    resize: vertical;
+    border: 1.5px solid var(--line);
+    border-radius: 16px;
+    padding: 14px 15px;
+    font-family:'Inter', sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--ink);
+    background: var(--bg);
+    outline:none;
+    transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  textarea:focus{ border-color: var(--dusk); box-shadow: 0 0 0 4px rgba(113,102,217,0.1); }
+  textarea::placeholder{ color: #9496B3; }
+
+  .composer-row{
+    display:flex;
+    gap:10px;
+    margin-top: 13px;
+    align-items:center;
+  }
+  button{
+    font-family:'Inter', sans-serif;
+    font-weight:600;
+    border:none;
+    cursor:pointer;
+    border-radius: 13px;
+    transition: transform .1s ease, opacity .15s ease, box-shadow .15s ease;
+  }
+  button:active{ transform: scale(0.97); }
+
+  .btn-primary{
+    background: var(--ink);
+    color:#fff;
+    font-size: 14.5px;
+    padding: 12px 18px;
+    flex: 1;
+    box-shadow: 0 8px 18px -8px rgba(20,21,43,0.5);
+  }
+  .btn-primary:disabled{ opacity:.4; cursor:default; box-shadow:none; }
+  .btn-ghost{
+    background: transparent;
+    color: var(--ink-soft);
+    font-size: 13px;
+    padding: 12px 12px;
+    border: 1.5px solid var(--line);
+  }
+
+  .alerts-bar{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    padding: 13px 24px;
+    background: #F5F3FE;
+    border-bottom: 1px solid var(--line);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink-soft);
+  }
+  .alerts-bar button{
+    margin-left:auto;
+    background: var(--dusk);
+    color:#fff;
+    font-size:12.5px;
+    padding: 7px 13px;
+  }
+  .alerts-bar.enabled{ background: #EBFAF5; }
+  .alerts-bar.enabled button{ background: var(--done); }
+  .dot{
+    width:7px; height:7px; border-radius:50%;
+    background: var(--dusk); flex-shrink:0;
+  }
+  .alerts-bar.enabled .dot{ background: var(--done); }
+
+  .timeline-wrap{
+    flex:1;
+    overflow-y:auto;
+    padding: 22px 20px 30px 18px;
+  }
+  .empty-state{
+    text-align:center;
+    padding: 50px 20px;
+    color: var(--ink-soft);
+  }
+  .empty-state .big{
+    font-family:'Bricolage Grotesque', sans-serif;
+    font-size: 19px;
+    color: var(--ink);
+    margin-bottom: 6px;
+  }
+
+  .rail{
+    position:relative;
+    padding-left: 26px;
+  }
+  .rail::before{
+    content:"";
+    position:absolute;
+    left: 7px; top: 4px; bottom: 4px;
+    width: 3px;
+    border-radius: 3px;
+    background: linear-gradient(to bottom, var(--dawn), var(--midday) 45%, var(--dusk) 75%, var(--night));
+  }
+  .now-marker{
+    position:absolute;
+    left: -2px;
+    width: 17px; height: 17px;
+    border-radius:50%;
+    background: #fff;
+    border: 3px solid var(--midday);
+    box-shadow: 0 0 0 4px rgba(239,100,97,0.15);
+    z-index:2;
+  }
+  .now-label{
+    position:absolute;
+    left: 22px;
+    transform: translateY(-50%);
+    font-size: 11px;
+    font-weight:600;
+    color: var(--midday);
+    background: #fff;
+    padding: 1px 6px;
+    border-radius: 6px;
+  }
+
+  .task{
+    position:relative;
+    margin-bottom: 16px;
+    padding-left: 20px;
+    animation: taskIn 0.35s ease both;
+  }
+  @keyframes taskIn{
+    from{ opacity:0; transform: translateY(6px); }
+    to{ opacity:1; transform: translateY(0); }
+  }
+  .task::before{
+    content:"";
+    position:absolute;
+    left:-19px; top: 6px;
+    width: 13px; height:13px;
+    border-radius:50%;
+    background: var(--period-color, var(--dusk));
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 1.5px var(--period-color, var(--dusk));
+    z-index:1;
+    transition: background .2s ease, box-shadow .2s ease;
+  }
+  .task.done::before{ background: var(--done); box-shadow: 0 0 0 1.5px var(--done); }
+  .task.overdue::before{ background: var(--overdue); box-shadow: 0 0 0 1.5px var(--overdue); }
+
+  .card{
+    background: var(--paper);
+    border-radius: 16px;
+    padding: 13px 15px;
+    border: 1.5px solid var(--line);
+    box-shadow: 0 6px 16px -12px rgba(20,21,43,0.35);
+    transition: opacity .25s ease, box-shadow .25s ease, background .25s ease;
+  }
+  .task.overdue .card{ border-color: rgba(217,74,61,0.3); background: #FFF4F2; box-shadow:none; }
+  .task.done .card{ opacity: 0.62; box-shadow:none; }
+
+  .card-top{
+    display:flex;
+    align-items:flex-start;
+    gap: 10px;
+  }
+  .check{
+    width: 22px; height:22px;
+    border-radius:7px;
+    border: 2px solid var(--line);
+    flex-shrink:0;
+    margin-top:1px;
+    background:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    transition: transform .15s ease, background .15s ease, border-color .15s ease;
+  }
+  .check:active{ transform: scale(0.85); }
+  .check svg{ width:13px; height:13px; opacity:0; transition: opacity .15s ease; }
+  .task.done .check{ background: var(--done); border-color: var(--done); animation: checkPop .3s ease; }
+  .task.done .check svg{ opacity:1; }
+  @keyframes checkPop{
+    0%{ transform: scale(0.7); } 60%{ transform: scale(1.15); } 100%{ transform: scale(1); }
+  }
+
+  .task-text{
+    flex:1;
+    font-size: 15px;
+    line-height:1.4;
+    transition: color .2s ease;
+  }
+  .task.done .task-text{ text-decoration: line-through; color: var(--ink-soft); }
+
+
+  .task-time{
+    font-size: 11.5px;
+    font-weight:600;
+    color: var(--period-color, var(--dusk));
+    margin-top: 3px;
+  }
+  .task.overdue .task-time{ color: var(--overdue); }
+
+  .task-meta{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top: 4px;
+  }
+  .flag{
+    font-size: 11px;
+    font-weight:600;
+    color: var(--overdue);
+  }
+  .remove-x{
+    background:none; border:none; color: var(--ink-soft);
+    font-size:16px; cursor:pointer; padding:2px 6px;
+    opacity:0.5;
+  }
+
+  footer{
+    padding: 14px 24px 20px;
+    border-top: 1px solid var(--line);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap: 12px;
+  }
+  .progress-text{ font-size:12.5px; color: var(--ink-soft); }
+
+  .diag-toggle{
+    background: none;
+    border: none;
+    color: var(--ink-soft);
+    font-size: 11.5px;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 4px;
+  }
+  .diag-panel{
+    border-top: 1px solid var(--line);
+    background: #F7F7FA;
+    padding: 12px 20px 16px;
+  }
+  .diag-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom: 8px;
+  }
+  .diag-header span{ font-size: 12px; font-weight:700; color: var(--ink-soft); }
+  .diag-test-btn{
+    background: var(--dusk);
+    color:#fff;
+    border:none;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight:600;
+    padding: 6px 10px;
+    cursor:pointer;
+  }
+  .diag-log{
+    max-height: 160px;
+    overflow-y:auto;
+    font-family: monospace;
+    font-size: 10.5px;
+    line-height:1.5;
+    color: #333;
+    background:#fff;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 8px 10px;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .progress-text b{ color: var(--ink); }
+  .ring-wrap{ display:flex; align-items:center; gap:10px; }
+  .ring{ width:34px; height:34px; flex-shrink:0; }
+  .ring circle{ fill:none; stroke-width: 4; }
+  .ring .track{ stroke: var(--line); }
+  .ring .fill{ stroke: var(--done); stroke-linecap: round; transform: rotate(-90deg); transform-origin: 50% 50%; transition: stroke-dasharray .3s ease; }
+</style>
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+</head>
+<body>
+
+<div class="name-overlay" id="nameOverlay">
+  <div class="name-card">
+    <div class="name-mark"></div>
+    <h2>Hey! What should I call you?</h2>
+    <p>I'll use your name when I remind you about things — it feels a lot more like someone's actually got your back.</p>
+    <input type="text" id="nameInputField" placeholder="Your first name" maxlength="20">
+    <button class="btn-primary" id="nameSubmitBtn" style="width:100%;">Continue</button>
+    <button id="nameSkipBtn" class="name-skip-btn" type="button" onclick="document.getElementById('nameOverlay').classList.add('hidden')">Skip for now</button>
+  </div>
+</div>
+
+<div class="phone">
+  <div class="statusbar">
+    <span id="clockLabel">9:41</span>
+    <span class="icons">●●●●&nbsp; 5G&nbsp; ▮▮▮</span>
+  </div>
+  <header>
+    <div class="brand-row">
+      <div class="brand-mark"></div>
+      <div class="brand-name">Day Flow</div>
+    </div>
+    <h1 id="greetingLabel">Tell me what's on your plate.</h1>
+    <p class="today" id="todayLabel"></p>
+  </header>
+
+  <div class="composer">
+    <label for="taskInput">What's on your plate today?</label>
+    <div class="mode-row" id="modeRow">
+      <button class="mode-pill active" data-mode="personal">🏡 Personal</button>
+      <button class="mode-pill" data-mode="student">🎓 Student</button>
+      <button class="mode-pill" data-mode="creator">🎬 Creator</button>
+    </div>
+    <div class="input-row">
+      <textarea id="taskInput" placeholder="e.g. Grocery shopping this morning, doctor's appointment by 3pm, family time in the evening"></textarea>
+      <button class="mic-btn" id="micBtn" title="Tap to speak your tasks">🎤</button>
+    </div>
+    <div class="mic-status" id="micStatus"></div>
+    <div class="composer-row">
+      <button class="btn-primary" id="buildBtn">Build my timeline</button>
+      <button class="btn-ghost" id="clearBtn">Clear day</button>
+    </div>
+
+    <div class="timetable-box" id="timetableBox" style="display:none;">
+      <div class="timetable-label">🎓 Upload your class timetable — I'll build today's classes and turn reminders on automatically</div>
+      <input type="text" id="levelInput" class="level-input" placeholder="Your level, e.g. 200 level (leave blank if it's just one timetable)">
+      <input type="file" id="timetableFile" accept=".txt,.csv" style="display:none;">
+      <div class="timetable-row">
+        <button class="btn-ghost" id="timetableUploadBtn" type="button">📎 Upload file</button>
+        <button class="btn-primary" id="timetableAddBtn" type="button">Add today's classes</button>
+      </div>
+      <textarea id="timetablePaste" placeholder="Or paste it here, one class per line, e.g.&#10;200 Level&#10;Monday 9:00am Mathematics&#10;Monday 11:00am Physics&#10;300 Level&#10;Tuesday 10:00am Chemistry"></textarea>
+      <div class="timetable-status" id="timetableStatus"></div>
+    </div>
+
+    <div class="timetable-box" id="contentCalBox" style="display:none;">
+      <div class="timetable-label">🎬 Upload your content calendar — I'll set today's reminders from it automatically</div>
+      <input type="file" id="contentCalFile" accept=".txt,.csv" style="display:none;">
+      <div class="timetable-row">
+        <button class="btn-ghost" id="contentCalUploadBtn" type="button">📎 Upload file</button>
+        <button class="btn-primary" id="contentCalAddBtn" type="button">Add today's content</button>
+      </div>
+      <textarea id="contentCalPaste" placeholder="Or paste it here, one item per line, e.g.&#10;Monday - Film reel for morning routine&#10;Sep 3 - Post Q&A video&#10;Friday 4pm - Edit weekly vlog"></textarea>
+      <div class="timetable-status" id="contentCalStatus"></div>
+    </div>
+  </div>
+
+  <div class="alerts-bar" id="alertsBar">
+    <span class="dot"></span>
+    <span id="alertsText">Turn on so Day Flow can notify, buzz, and speak your reminders</span>
+    <button id="alertsBtn">Turn on</button>
+  </div>
+
+  <div class="timeline-wrap" id="timelineWrap">
+    <div class="empty-state" id="emptyState">
+      <div class="big">Nothing on the timeline yet</div>
+      <div>Type your day above and tap "Build my timeline."</div>
+    </div>
+    <div class="rail" id="rail" style="display:none;"></div>
+  </div>
+
+  <footer>
+    <div class="ring-wrap">
+      <svg class="ring" viewBox="0 0 36 36">
+        <circle class="track" cx="18" cy="18" r="15.5"></circle>
+        <circle class="fill" id="ringFill" cx="18" cy="18" r="15.5" stroke-dasharray="0 100"></circle>
+      </svg>
+      <span class="progress-text" id="progressText"></span>
+    </div>
+    <button id="diagToggle" class="diag-toggle" type="button">Diagnostics</button>
+  </footer>
+  <div class="diag-panel" id="diagPanel" style="display:none;">
+    <div class="diag-header">
+      <span>Diagnostics</span>
+      <button id="testPushBtn" class="diag-test-btn" type="button">Send test push in 20s</button>
+    </div>
+    <div id="diagLog" class="diag-log"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const el = (id) => document.getElementById(id);
+
+  // ---------- real, permanent storage (this actually persists on a live site) ----------
+  // ---------- diagnostics (visible on-screen log to debug the push pipeline) ----------
+  const diagLog = el('diagLog');
+  const diagPanel = el('diagPanel');
+  const diagToggle = el('diagToggle');
+  const testPushBtn = el('testPushBtn');
+
+  function debugLog(msg){
+    const time = new Date().toLocaleTimeString();
+    const line = `[${time}] ${msg}`;
+    console.log(line);
+    if(diagLog){
+      diagLog.textContent += line + '\n';
+      diagLog.scrollTop = diagLog.scrollHeight;
+    }
+  }
+
+  diagToggle.addEventListener('click', () => {
+    diagPanel.style.display = diagPanel.style.display === 'none' ? 'block' : 'none';
+  });
+
+  debugLog('Page loaded.');
+  window.addEventListener('error', (e) => debugLog('JS error: ' + e.message));
+
+  const storage = {
+    async get(key){
+      const v = localStorage.getItem(key);
+      return v === null ? null : { key, value: v };
+    },
+    async set(key, value){
+      localStorage.setItem(key, value);
+      return { key, value };
+    },
+    async delete(key){
+      localStorage.removeItem(key);
+      return { key, deleted: true };
+    }
+  };
+
+  const STORAGE_KEY_PREFIX = 'dayflow-tasks:';
+  const todayStr = () => {
+    const d = new Date();
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  };
+  const storageKey = STORAGE_KEY_PREFIX + todayStr();
+
+  let tasks = [];
+  let alertsEnabled = false;
+  let audioCtx = null;
+  let firedReminders = new Set();
+
+  const taskInput = el('taskInput');
+  const buildBtn = el('buildBtn');
+  const clearBtn = el('clearBtn');
+  const modeRow = el('modeRow');
+  const micBtn = el('micBtn');
+  const micStatus = el('micStatus');
+  const timetableBox = el('timetableBox');
+  const timetableFile = el('timetableFile');
+  const timetableUploadBtn = el('timetableUploadBtn');
+  const timetableAddBtn = el('timetableAddBtn');
+  const timetablePaste = el('timetablePaste');
+  const timetableStatus = el('timetableStatus');
+  const levelInput = el('levelInput');
+  const contentCalBox = el('contentCalBox');
+  const contentCalFile = el('contentCalFile');
+  const contentCalUploadBtn = el('contentCalUploadBtn');
+  const contentCalAddBtn = el('contentCalAddBtn');
+  const contentCalPaste = el('contentCalPaste');
+  const contentCalStatus = el('contentCalStatus');
+  const rail = el('rail');
+  const emptyState = el('emptyState');
+  const progressText = el('progressText');
+  const todayLabel = el('todayLabel');
+  const alertsBar = el('alertsBar');
+  const alertsBtn = el('alertsBtn');
+  const alertsText = el('alertsText');
+  const ringFill = el('ringFill');
+  const clockLabel = el('clockLabel');
+  const nameOverlay = el('nameOverlay');
+  const nameInputField = el('nameInputField');
+  const nameSubmitBtn = el('nameSubmitBtn');
+  const nameSkipBtn = el('nameSkipBtn');
+  const greetingLabel = el('greetingLabel');
+
+  let userName = '';
+
+  todayLabel.textContent = new Date().toLocaleDateString(undefined, { weekday:'long', month:'long', day:'numeric' });
+
+  function updateClock(){
+    clockLabel.textContent = new Date().toLocaleTimeString(undefined, { hour:'numeric', minute:'2-digit' });
+  }
+  updateClock();
+  setInterval(updateClock, 15000);
+
+  // ---------- name onboarding ----------
+  function applyGreeting(){
+    greetingLabel.textContent = userName ? `Hey ${userName}, what's on your plate?` : "Tell me what's on your plate.";
+  }
+
+  function saveName(name){
+    userName = name.trim();
+    applyGreeting();
+    storage.set('dayflow-name', userName).catch((e) => debugLog('Failed to save name: ' + e.message));
+  }
+
+  async function loadName(){
+    try{
+      const res = await storage.get('dayflow-name');
+      if(res && res.value){
+        userName = res.value;
+        applyGreeting();
+        nameOverlay.classList.add('hidden');
+        return;
+      }
+    }catch(e){}
+    nameOverlay.classList.remove('hidden');
+  }
+
+  nameSubmitBtn.addEventListener('click', () => {
+    try{
+      const val = nameInputField.value.trim();
+      if(!val) { nameInputField.focus(); return; }
+      nameOverlay.classList.add('hidden'); // close immediately — never let a background save block this
+      saveName(val);
+    }catch(e){
+      debugLog('Continue button error: ' + e.message);
+      nameOverlay.classList.add('hidden'); // never let a crash here trap the user
+    }
+  });
+  nameSkipBtn.addEventListener('click', () => {
+    nameOverlay.classList.add('hidden');
+  });
+  nameInputField.addEventListener('keydown', (e) => {
+    if(e.key === 'Enter') nameSubmitBtn.click();
+  });
+
+  function personalize(text){
+    const clause = text.charAt(0).toLowerCase() + text.slice(1);
+    return userName ? `${userName}, you're meant to ${clause} now.` : `Time to ${clause}.`;
+  }
+
+
+  // ---------- modes ----------
+  const MODES = {
+    personal: { label: 'Personal', icon: '🏡', placeholder: 'e.g. Grocery shopping this morning, doctor\'s appointment by 3pm, family time in the evening' },
+    student:  { label: 'Student',  icon: '🎓', placeholder: 'e.g. Study for exam this morning, submit assignment by 2pm' },
+    creator:  { label: 'Creator',  icon: '🎬', placeholder: 'e.g. Film content this morning, edit video by 3pm, post to Instagram in the evening' }
+  };
+  let activeMode = 'personal';
+
+  function setMode(mode, save){
+    activeMode = mode;
+    modeRow.querySelectorAll('.mode-pill').forEach(p => p.classList.toggle('active', p.dataset.mode === mode));
+    taskInput.placeholder = MODES[mode].placeholder;
+    timetableBox.style.display = (mode === 'student') ? 'block' : 'none';
+    contentCalBox.style.display = (mode === 'creator') ? 'block' : 'none';
+    if(save !== false) storage.set('dayflow-mode', mode).catch(()=>{});
+  }
+
+  modeRow.querySelectorAll('.mode-pill').forEach(p => {
+    p.addEventListener('click', () => setMode(p.dataset.mode));
+  });
+
+  async function loadMode(){
+    try{
+      const res = await storage.get('dayflow-mode');
+      if(res && res.value && MODES[res.value]) { setMode(res.value, false); return; }
+    }catch(e){}
+    setMode('personal', false);
+  }
+
+  // ---------- voice input ----------
+  let recognition = null;
+  let isListening = false;
+  let silenceTimer = null;
+  let baseTextBeforeListening = '';
+  const SILENCE_MS = 2200;
+
+  function setListeningUI(on){
+    isListening = on;
+    micBtn.classList.toggle('listening', on);
+    micStatus.innerHTML = on
+      ? '<span class="wave"><span></span><span></span><span></span></span> Listening… speak naturally, I\'ll send it once you pause'
+      : '';
+  }
+
+  function resetSilenceTimer(){
+    if(silenceTimer) clearTimeout(silenceTimer);
+    silenceTimer = setTimeout(() => {
+      if(recognition && isListening) recognition.stop();
+    }, SILENCE_MS);
+  }
+
+  function initSpeech(){
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if(!SR){
+      micBtn.disabled = true;
+      micBtn.title = 'Voice input is not supported on this browser';
+      return;
+    }
+    recognition = new SR();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+
+    recognition.onresult = (e) => {
+      resetSilenceTimer();
+      let finalText = '';
+      let interimText = '';
+      for(let i = 0; i < e.results.length; i++){
+        const t = e.results[i][0].transcript;
+        if(e.results[i].isFinal) finalText += t + ' ';
+        else interimText += t;
+      }
+      const combined = (baseTextBeforeListening ? baseTextBeforeListening + ', ' : '') + finalText + interimText;
+      taskInput.value = combined.trim();
+    };
+
+    recognition.onerror = (e) => {
+      // "no-speech" or brief hiccups shouldn't confuse the user — just keep listening
+      if(e.error === 'no-speech' || e.error === 'aborted'){
+        return;
+      }
+      setListeningUI(false);
+      if(e.error === 'not-allowed' || e.error === 'service-not-allowed'){
+        micStatus.textContent = 'Microphone access was blocked — check your browser permissions.';
+      }
+    };
+
+    recognition.onend = () => {
+      if(silenceTimer) clearTimeout(silenceTimer);
+      if(isListening){
+        // recognition sometimes stops itself early — restart seamlessly unless the user meant to stop
+        try{ recognition.start(); return; }catch(e){}
+      }
+      setListeningUI(false);
+      const finalValue = taskInput.value.trim();
+      if(finalValue && finalValue !== baseTextBeforeListening){
+        buildBtn.click();
+      }
+    };
+  }
+
+  micBtn.addEventListener('click', () => {
+    if(!recognition) return;
+    if(isListening){
+      isListening = false; // prevents auto-restart in onend
+      recognition.stop();
+      return;
+    }
+    baseTextBeforeListening = taskInput.value.trim();
+    setListeningUI(true);
+    try{
+      recognition.start();
+      resetSilenceTimer();
+    }catch(e){ setListeningUI(false); }
+  });
+  initSpeech();
+  async function loadTasks(){
+    try{
+      const res = await storage.get(storageKey);
+      if(res && res.value){
+        const parsed = JSON.parse(res.value);
+        tasks = parsed.map(t => ({...t, time: new Date(t.time)}));
+      }
+    }catch(e){ /* no saved tasks yet */ }
+    render();
+  }
+  async function saveTasks(){
+    try{
+      await storage.set(storageKey, JSON.stringify(tasks));
+    }catch(e){ console.error('Could not save tasks', e); }
+  }
+
+  // ---------- parsing ----------
+  const PERIODS = {
+    morning:   { hour: 9,  color: 'var(--dawn)',  label: 'Morning' },
+    afternoon: { hour: 14, color: 'var(--midday)',label: 'Afternoon' },
+    evening:   { hour: 18, color: 'var(--dusk)',  label: 'Evening' },
+    night:     { hour: 21, color: 'var(--night)', label: 'Night' }
+  };
+
+  function periodForHour(h){
+    if(h < 12) return PERIODS.morning;
+    if(h < 17) return PERIODS.afternoon;
+    if(h < 20) return PERIODS.evening;
+    return PERIODS.night;
+  }
+
+  function parseInput(raw, mode){
+    const chunks = raw.split(/[,\n;]+/).map(s => s.trim()).filter(Boolean);
+    const now = new Date();
+    let sequentialSlot = new Date(now.getTime());
+    sequentialSlot.setMinutes(0,0,0);
+    sequentialSlot.setHours(sequentialSlot.getHours() + 1);
+
+    const results = [];
+
+    chunks.forEach((chunk, i) => {
+      let text = chunk;
+      let time = null;
+
+      // explicit time e.g. "by 2pm", "at 5:30 am", "by 17:00"
+      const timeMatch = text.match(/\b(?:at|by)\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\b/i);
+      if(timeMatch){
+        let hour = parseInt(timeMatch[1], 10);
+        const minute = timeMatch[2] ? parseInt(timeMatch[2], 10) : 0;
+        const ampm = timeMatch[3] ? timeMatch[3].toLowerCase() : null;
+        if(ampm === 'pm' && hour < 12) hour += 12;
+        if(ampm === 'am' && hour === 12) hour = 0;
+        if(!ampm && hour < 8) hour += 12; // best-guess default for bare small numbers
+        time = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hour, minute);
+        text = text.replace(timeMatch[0], '').trim();
+      } else {
+        // period keyword e.g. "this morning", "in the evening"
+        const periodMatch = text.match(/\b(morning|afternoon|evening|night)\b/i);
+        if(periodMatch){
+          const p = PERIODS[periodMatch[1].toLowerCase()];
+          time = new Date(now.getFullYear(), now.getMonth(), now.getDate(), p.hour, 0);
+          text = text.replace(/\b(this|in the|by)\s+(morning|afternoon|evening|night)\b/i, '')
+                     .replace(/\b(morning|afternoon|evening|night)\b/i, '')
+                     .trim();
+        } else {
+          // no time info at all — place it in the next open slot today
+          time = new Date(sequentialSlot.getTime());
+          sequentialSlot.setHours(sequentialSlot.getHours() + 2);
+        }
+      }
+
+      text = text.replace(/^(today|i (?:have|need|want) to|i will|i'll|i have to)\s+/i, '').trim();
+      text = text.charAt(0).toUpperCase() + text.slice(1);
+
+      results.push({
+        id: 'task-' + Date.now() + '-' + i,
+        text,
+        time: time.toISOString ? time : new Date(time),
+        done: false,
+        mode: mode || 'personal'
+      });
+    });
+
+    return results;
+  }
+
+  // ---------- timetable parsing (Student mode) ----------
+  const WEEKDAYS = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+  const MONTHS = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+
+  function extractLevelDigits(str){
+    const m = str.match(/(\d{3})/);
+    return m ? m[1] : null;
+  }
+
+  function parseTimetable(raw, levelFilter){
+    const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+    const today = new Date();
+    const todayIdx = today.getDay();
+    const results = [];
+    const wantedLevel = levelFilter ? extractLevelDigits(levelFilter) : null;
+    let currentLevel = null;
+
+    lines.forEach((line, i) => {
+      // a line like "200 Level" or "200L" on its own (no weekday, no time) is a section header
+      const isLevelHeader = /\b\d{3}\s*(l|level)\b/i.test(line) && !/\b(sun|mon|tue|wed|thu|fri|sat)[a-z]*\b/i.test(line);
+      if(isLevelHeader){
+        currentLevel = extractLevelDigits(line);
+        return;
+      }
+
+      if(wantedLevel && currentLevel && currentLevel !== wantedLevel) return;
+      // if a level was requested but this line hasn't appeared under any header yet, skip it —
+      // it means the timetable hasn't labeled it, so we can't safely include it in a filtered view
+      if(wantedLevel && !currentLevel) return;
+
+      const dayMatch = line.match(/\b(sun|mon|tue|wed|thu|fri|sat)[a-z]*\b/i);
+      if(!dayMatch) return;
+      const dayIdx = WEEKDAYS.findIndex(d => d.startsWith(dayMatch[1].toLowerCase()));
+      if(dayIdx !== todayIdx) return; // only build today's classes
+
+      const timeMatch = line.match(/\b(\d{1,2})(:(\d{2}))?\s*(am|pm)?\b/i);
+      if(!timeMatch) return;
+      let hour = parseInt(timeMatch[1], 10);
+      const minute = timeMatch[3] ? parseInt(timeMatch[3], 10) : 0;
+      const ampm = timeMatch[4] ? timeMatch[4].toLowerCase() : null;
+      if(ampm === 'pm' && hour < 12) hour += 12;
+      if(ampm === 'am' && hour === 12) hour = 0;
+      if(!ampm && hour < 8) hour += 12;
+
+      let subject = line.replace(dayMatch[0], '');
+      subject = subject.replace(/\b\d{1,2}(:\d{2})?\s*(am|pm)?\s*(-|–|to)\s*\d{1,2}(:\d{2})?\s*(am|pm)?\b/gi, '');
+      subject = subject.replace(/\b\d{1,2}(:\d{2})?\s*(am|pm)\b/gi, '');
+      subject = subject.replace(/^[\s,:\-–]+|[\s,:\-–]+$/g, '').trim();
+      if(!subject) subject = 'Class';
+      subject = subject.charAt(0).toUpperCase() + subject.slice(1);
+
+      const time = new Date(today.getFullYear(), today.getMonth(), today.getDate(), hour, minute);
+      results.push({
+        id: 'class-' + Date.now() + '-' + i,
+        text: subject,
+        time,
+        done: false,
+        mode: 'student'
+      });
+    });
+
+    return results;
+  }
+
+  timetableUploadBtn.addEventListener('click', () => timetableFile.click());
+  timetableFile.addEventListener('change', () => {
+    const file = timetableFile.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => { timetablePaste.value = e.target.result; };
+    reader.readAsText(file);
+  });
+
+  timetableAddBtn.addEventListener('click', async () => {
+    const raw = timetablePaste.value.trim();
+    if(!raw){ timetableStatus.textContent = 'Paste or upload your timetable first.'; return; }
+    const levelFilter = levelInput.value.trim();
+    const hasMultipleLevelHeaders = (raw.match(/\b\d{3}\s*(l|level)\b/gi) || []).length > 1;
+    if(hasMultipleLevelHeaders && !levelFilter){
+      timetableStatus.textContent = 'This timetable seems to cover more than one level — enter your level above so I only pick out yours.';
+      return;
+    }
+    const classes = parseTimetable(raw, levelFilter);
+    if(classes.length === 0){
+      timetableStatus.textContent = 'No classes found for today (for that level, if entered) — check the format.';
+      return;
+    }
+    tasks = tasks.concat(classes);
+    saveTasks();
+    render();
+    await enableAlerts();
+    classes.forEach(scheduleServerReminder);
+    timetableStatus.textContent = `Added ${classes.length} class${classes.length > 1 ? 'es' : ''} for today, and reminders are now on.`;
+  });
+
+  // ---------- content calendar parsing (Creator mode) ----------
+  function parseContentCalendar(raw){
+    const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+    const today = new Date();
+    const todayIdx = today.getDay();
+    const results = [];
+
+    lines.forEach((line, i) => {
+      let matchesToday = false;
+
+      const dayMatch = line.match(/\b(sun|mon|tue|wed|thu|fri|sat)[a-z]*\b/i);
+      if(dayMatch){
+        const dayIdx = WEEKDAYS.findIndex(d => d.startsWith(dayMatch[1].toLowerCase()));
+        if(dayIdx === todayIdx) matchesToday = true;
+      }
+
+      const dateMatch = line.match(/\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s*(\d{1,2})\b/i);
+      if(dateMatch){
+        const monthIdx = MONTHS.findIndex(m => dateMatch[1].toLowerCase().startsWith(m));
+        const day = parseInt(dateMatch[2], 10);
+        if(monthIdx === today.getMonth() && day === today.getDate()) matchesToday = true;
+      }
+
+      if(!matchesToday) return;
+
+      const timeMatch = line.match(/\b(\d{1,2})(:(\d{2}))?\s*(am|pm)?\b/i);
+      let hour = 12, minute = 0;
+      if(timeMatch){
+        hour = parseInt(timeMatch[1], 10);
+        minute = timeMatch[3] ? parseInt(timeMatch[3], 10) : 0;
+        const ampm = timeMatch[4] ? timeMatch[4].toLowerCase() : null;
+        if(ampm === 'pm' && hour < 12) hour += 12;
+        if(ampm === 'am' && hour === 12) hour = 0;
+        if(!ampm && hour < 8) hour += 12;
+      }
+
+      let label = line;
+      if(dayMatch) label = label.replace(dayMatch[0], '');
+      if(dateMatch) label = label.replace(dateMatch[0], '');
+      label = label.replace(/\b\d{1,2}(:\d{2})?\s*(am|pm)?\s*(-|–|to)\s*\d{1,2}(:\d{2})?\s*(am|pm)?\b/gi, ''); // time ranges like "3:07 AM - 4:00 AM"
+      label = label.replace(/\b\d{1,2}(:\d{2})?\s*(am|pm)\b/gi, ''); // any remaining single times
+      label = label.replace(/^[\s,:\-–]+|[\s,:\-–]+$/g, '').trim();
+      if(!label) label = 'Content task';
+      label = label.charAt(0).toUpperCase() + label.slice(1);
+
+      const time = new Date(today.getFullYear(), today.getMonth(), today.getDate(), hour, minute);
+      results.push({
+        id: 'content-' + Date.now() + '-' + i,
+        text: label,
+        time,
+        done: false,
+        mode: 'creator'
+      });
+    });
+
+    return results;
+  }
+
+  contentCalUploadBtn.addEventListener('click', () => contentCalFile.click());
+  contentCalFile.addEventListener('change', () => {
+    const file = contentCalFile.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => { contentCalPaste.value = e.target.result; };
+    reader.readAsText(file);
+  });
+
+  contentCalAddBtn.addEventListener('click', async () => {
+    const raw = contentCalPaste.value.trim();
+    if(!raw){ contentCalStatus.textContent = 'Paste or upload your content calendar first.'; return; }
+    const items = parseContentCalendar(raw);
+    if(items.length === 0){
+      contentCalStatus.textContent = 'No content items found for today in that calendar — check the format.';
+      return;
+    }
+    tasks = tasks.concat(items);
+    saveTasks();
+    render();
+    await enableAlerts();
+    items.forEach(scheduleServerReminder);
+    contentCalStatus.textContent = `Added ${items.length} item${items.length > 1 ? 's' : ''} for today, and reminders are now on.`;
+  });
+
+  // ---------- rendering ----------
+  function fmtTime(d){
+    return d.toLocaleTimeString(undefined, { hour:'numeric', minute:'2-digit' });
+  }
+
+  function render(){
+    if(tasks.length === 0){
+      emptyState.style.display = 'block';
+      rail.style.display = 'none';
+      progressText.textContent = '';
+      ringFill.setAttribute('stroke-dasharray', '0 100');
+      return;
+    }
+    emptyState.style.display = 'none';
+    rail.style.display = 'block';
+
+    const sorted = [...tasks].sort((a,b) => new Date(a.time) - new Date(b.time));
+    const now = new Date();
+
+    rail.innerHTML = '';
+    let nowInserted = false;
+
+    sorted.forEach(t => {
+      const time = new Date(t.time);
+      const isOverdue = !t.done && time < now;
+
+      if(!nowInserted && time > now){
+        insertNowMarker();
+        nowInserted = true;
+      }
+
+      const period = periodForHour(time.getHours());
+      const div = document.createElement('div');
+      div.className = 'task' + (t.done ? ' done' : '') + (isOverdue ? ' overdue' : '');
+      div.style.setProperty('--period-color', period.color);
+      div.innerHTML = `
+        <div class="card">
+          <div class="card-top">
+            <div class="check" data-id="${t.id}">
+              <svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.5 12L13 4.5" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div style="flex:1">
+              <div class="task-text">${escapeHtml(t.text)}</div>
+              <div class="task-time">${MODES[t.mode] ? MODES[t.mode].icon : ''} ${fmtTime(time)} · ${period.label}</div>
+            </div>
+            <button class="remove-x" data-id="${t.id}">×</button>
+          </div>
+          ${isOverdue ? '<div class="task-meta"><span class="flag">Not done yet — still on your list</span></div>' : ''}
+        </div>
+      `;
+      rail.appendChild(div);
+    });
+
+    if(!nowInserted) insertNowMarker();
+
+    document.querySelectorAll('.check').forEach(c => c.addEventListener('click', () => toggleDone(c.dataset.id)));
+    document.querySelectorAll('.remove-x').forEach(c => c.addEventListener('click', () => removeTask(c.dataset.id)));
+
+    const doneCount = tasks.filter(t => t.done).length;
+    progressText.innerHTML = `<b>${doneCount}</b> of <b>${tasks.length}</b> done today`;
+    const circumference = 2 * Math.PI * 15.5;
+    const pct = tasks.length ? doneCount / tasks.length : 0;
+    ringFill.setAttribute('stroke-dasharray', `${circumference * pct} ${circumference}`);
+  }
+
+  function insertNowMarker(){
+    const now = new Date();
+    const wrap = document.createElement('div');
+    wrap.style.position = 'relative';
+    wrap.style.height = '0';
+    wrap.innerHTML = `<div class="now-marker" style="top:6px"></div><div class="now-label" style="top:14px">Now · ${fmtTime(now)}</div>`;
+    rail.appendChild(wrap);
+  }
+
+  function escapeHtml(s){
+    const d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+  }
+
+  function toggleDone(id){
+    const t = tasks.find(t => t.id === id);
+    if(t){ t.done = !t.done; saveTasks(); render(); }
+  }
+  function removeTask(id){
+    tasks = tasks.filter(t => t.id !== id);
+    saveTasks(); render();
+  }
+
+  buildBtn.addEventListener('click', () => {
+    const raw = taskInput.value.trim();
+    if(!raw) return;
+    const newTasks = parseInput(raw, activeMode);
+    tasks = tasks.concat(newTasks);
+    taskInput.value = '';
+    saveTasks();
+    render();
+    newTasks.forEach(scheduleServerReminder);
+  });
+
+  clearBtn.addEventListener('click', () => {
+    tasks = [];
+    firedReminders.clear();
+    saveTasks();
+    render();
+  });
+
+  // ---------- reminders ----------
+  function beep(){
+    try{
+      if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.type = 'sine';
+      o.frequency.value = 880;
+      g.gain.value = 0.15;
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start();
+      setTimeout(() => { o.stop(); }, 350);
+    }catch(e){}
+  }
+
+  function tryVibrate(){
+    try{ if(navigator.vibrate) navigator.vibrate([200,100,200]); }catch(e){}
+  }
+
+  function speakTask(task){
+    try{
+      if(!('speechSynthesis' in window)) return;
+      const utter = new SpeechSynthesisUtterance(personalize(task.text));
+      utter.rate = 1;
+      utter.pitch = 1;
+      window.speechSynthesis.speak(utter);
+    }catch(e){}
+  }
+
+  function tryNotify(task){
+    try{
+      if('Notification' in window && Notification.permission === 'granted'){
+        new Notification('Day Flow', { body: personalize(task.text) });
+        return true;
+      }
+    }catch(e){}
+    return false;
+  }
+
+  // ---------- OneSignal (background push, works even when app is closed) ----------
+  let oneSignalSubscriptionId = null;
+  let oneSignalRef = null;
+  let resolveOneSignalReady;
+  const oneSignalReady = new Promise((res) => { resolveOneSignalReady = res; });
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  debugLog('Waiting for OneSignal SDK to load...');
+
+  async function logServiceWorkerStatus(){
+    try{
+      const regs = await navigator.serviceWorker.getRegistrations();
+      if(regs.length === 0){
+        debugLog('No service workers registered at all.');
+      }else{
+        regs.forEach((r) => {
+          debugLog(`SW registered — scope: ${r.scope}, active: ${!!r.active}, state: ${r.active ? r.active.state : 'none'}`);
+        });
+      }
+    }catch(e){
+      debugLog('Could not check service worker registrations: ' + e.message);
+    }
+    try{
+      const res = await fetch('/onesignal/OneSignalSDKWorker.js');
+      debugLog(`Fetching /onesignal/OneSignalSDKWorker.js directly → status ${res.status}`);
+    }catch(e){
+      debugLog('Direct fetch of OneSignal worker file FAILED: ' + e.message);
+    }
+  }
+
+  OneSignalDeferred.push(async function(OneSignal){
+    debugLog('OneSignal script loaded. Initializing...');
+    oneSignalRef = OneSignal;
+    try{
+      await OneSignal.init({
+        appId: 'c71df04d-deb1-45fa-bf71-99c642847216',
+        serviceWorkerPath: 'onesignal/OneSignalSDKWorker.js',
+        serviceWorkerParam: { scope: '/onesignal/' }
+      });
+      debugLog('OneSignal.init() succeeded.');
+    }catch(e){
+      debugLog('OneSignal.init() FAILED: ' + e.message);
+    }
+    await logServiceWorkerStatus();
+
+    function captureSubscriptionId(){
+      const id = OneSignal.User.PushSubscription.id;
+      const optedIn = OneSignal.User.PushSubscription.optedIn;
+      debugLog(`Subscription check — id: ${id || 'none yet'}, optedIn: ${optedIn}`);
+      if(id){
+        oneSignalSubscriptionId = id;
+        storage.set('dayflow-onesignal-id', id).catch(()=>{});
+      }
+    }
+    captureSubscriptionId();
+    OneSignal.User.PushSubscription.addEventListener('change', captureSubscriptionId);
+    resolveOneSignalReady();
+  });
+
+  // if the SDK script fails to load entirely (blocked, network issue), say so after a timeout
+  setTimeout(() => {
+    if(!oneSignalRef) debugLog('OneSignal SDK never became available after 6s — script may be blocked or failed to load.');
+  }, 6000);
+
+  async function loadStoredSubscriptionId(){
+    try{
+      const res = await storage.get('dayflow-onesignal-id');
+      if(res && res.value){
+        oneSignalSubscriptionId = res.value;
+        debugLog('Loaded saved subscription id from storage: ' + res.value);
+      }
+    }catch(e){}
+  }
+
+  function toOneSignalDate(date){
+    // OneSignal accepts "YYYY-MM-DD HH:MM:SS GMT+/-HHMM"
+    const pad = (n) => String(n).padStart(2, '0');
+    const offsetMin = -date.getTimezoneOffset();
+    const sign = offsetMin >= 0 ? '+' : '-';
+    const offH = pad(Math.floor(Math.abs(offsetMin) / 60));
+    const offM = pad(Math.abs(offsetMin) % 60);
+    return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())} GMT${sign}${offH}${offM}`;
+  }
+
+  async function scheduleServerReminder(task){
+    if(!oneSignalSubscriptionId){
+      debugLog('Skipped scheduling "' + task.text + '" — no subscription id yet.');
+      return;
+    }
+    const time = new Date(task.time);
+    if(time <= new Date()){
+      debugLog('Skipped scheduling "' + task.text + '" — time is in the past.');
+      return;
+    }
+    debugLog(`Scheduling push for "${task.text}" at ${toOneSignalDate(time)}...`);
+    try{
+      const res = await fetch('/.netlify/functions/schedule-notification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          playerId: oneSignalSubscriptionId,
+          message: personalize(task.text),
+          sendAfter: toOneSignalDate(time)
+        })
+      });
+      const body = await res.text();
+      debugLog(`Function responded (${res.status}): ${body}`);
+    }catch(e){
+      debugLog('Fetch to schedule-notification FAILED: ' + e.message);
+    }
+  }
+
+  testPushBtn.addEventListener('click', () => {
+    const t = new Date(Date.now() + 20000);
+    debugLog('Manual test push requested for ' + t.toLocaleTimeString());
+    scheduleServerReminder({ text: 'This is your test notification', time: t });
+  });
+
+  async function enableAlerts(){
+    debugLog('Turn on tapped. Waiting for OneSignal readiness...');
+    try{
+      await Promise.race([oneSignalReady, new Promise((r) => setTimeout(r, 4000))]);
+    }catch(e){}
+
+    let subscribedViaOneSignal = false;
+    try{
+      if(oneSignalRef && oneSignalRef.Notifications){
+        debugLog('Requesting permission via OneSignal SDK...');
+        await oneSignalRef.Notifications.requestPermission();
+        subscribedViaOneSignal = true;
+        debugLog('OneSignal permission request completed. Browser permission is now: ' + Notification.permission);
+        await logServiceWorkerStatus();
+      }else{
+        debugLog('OneSignal not ready yet — will use plain browser permission as fallback.');
+      }
+    }catch(e){
+      debugLog('OneSignal.Notifications.requestPermission() FAILED: ' + e.message);
+    }
+
+    if(!subscribedViaOneSignal){
+      // OneSignal wasn't available (blocked script, slow network, etc.) — fall back to
+      // plain browser permission so local, in-app reminders can still show a notification
+      try{
+        if('Notification' in window && Notification.permission !== 'granted'){
+          await Notification.requestPermission();
+        }
+      }catch(e){}
+    }
+
+    try{
+      if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      audioCtx.resume && audioCtx.resume();
+    }catch(e){}
+
+    alertsEnabled = true;
+    alertsBar.classList.add('enabled');
+    alertsText.textContent = subscribedViaOneSignal
+      ? 'Reminders are on — you\'ll get them even outside the app'
+      : 'Reminders are on (only while the app is open)';
+    alertsBtn.textContent = 'On';
+  }
+
+  alertsBtn.addEventListener('click', enableAlerts);
+
+  setInterval(() => {
+    if(!alertsEnabled) return;
+    const now = new Date();
+    tasks.forEach(t => {
+      if(t.done || firedReminders.has(t.id)) return;
+      const time = new Date(t.time);
+      const diff = now - time;
+      if(diff >= 0 && diff < 30000){
+        firedReminders.add(t.id);
+        const notified = tryNotify(t);
+        tryVibrate();
+        beep();
+        speakTask(t);
+        if(!notified){
+          alertsText.textContent = '⏰ ' + personalize(t.text);
+        }
+      }
+    });
+  }, 15000);
+
+  setInterval(render, 60000);
+
+  loadStoredSubscriptionId();
+  loadName();
+  loadMode();
+  loadTasks();
+
+  // Our own offline-caching service worker was registered at the root scope ("/"),
+  // which conflicts with OneSignal needing its own worker at "/onesignal/". Removing
+  // it (and cleaning up any already-registered copy) so OneSignal can work reliably.
+  // Offline support can be reintroduced later in a way that coexists properly.
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.getRegistrations().then((regs) => {
+      regs.forEach((reg) => {
+        if(reg.scope === window.location.origin + '/' || reg.scope === window.location.href){
+          debugLog('Unregistering old root-scope service worker: ' + reg.scope);
+          reg.unregister();
+        }
+      });
+    }).catch(() => {});
+  }
+})();
+</script>
+
+</body>
+</html>
