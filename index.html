@@ -535,6 +535,52 @@
     gap: 12px;
   }
   .progress-text{ font-size:12.5px; color: var(--ink-soft); }
+
+  .diag-toggle{
+    background: none;
+    border: none;
+    color: var(--ink-soft);
+    font-size: 11.5px;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 4px;
+  }
+  .diag-panel{
+    border-top: 1px solid var(--line);
+    background: #F7F7FA;
+    padding: 12px 20px 16px;
+  }
+  .diag-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom: 8px;
+  }
+  .diag-header span{ font-size: 12px; font-weight:700; color: var(--ink-soft); }
+  .diag-test-btn{
+    background: var(--dusk);
+    color:#fff;
+    border:none;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight:600;
+    padding: 6px 10px;
+    cursor:pointer;
+  }
+  .diag-log{
+    max-height: 160px;
+    overflow-y:auto;
+    font-family: monospace;
+    font-size: 10.5px;
+    line-height:1.5;
+    color: #333;
+    background:#fff;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 8px 10px;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
   .progress-text b{ color: var(--ink); }
   .ring-wrap{ display:flex; align-items:center; gap:10px; }
   .ring{ width:34px; height:34px; flex-shrink:0; }
@@ -633,11 +679,58 @@
       </svg>
       <span class="progress-text" id="progressText"></span>
     </div>
+    <button id="diagToggle" class="diag-toggle" type="button">Diagnostics</button>
   </footer>
+  <div class="diag-panel" id="diagPanel" style="display:none;">
+    <div class="diag-header">
+      <span>Diagnostics</span>
+      <button id="testPushBtn" class="diag-test-btn" type="button">Send test push in 20s</button>
+    </div>
+    <div id="diagLog" class="diag-log"></div>
+  </div>
 </div>
 
 <script>
 (function(){
+  // ---------- real, permanent storage (this actually persists on a live site) ----------
+  // ---------- diagnostics (visible on-screen log to debug the push pipeline) ----------
+  const diagLog = el('diagLog');
+  const diagPanel = el('diagPanel');
+  const diagToggle = el('diagToggle');
+  const testPushBtn = el('testPushBtn');
+
+  function debugLog(msg){
+    const time = new Date().toLocaleTimeString();
+    const line = `[${time}] ${msg}`;
+    console.log(line);
+    if(diagLog){
+      diagLog.textContent += line + '\n';
+      diagLog.scrollTop = diagLog.scrollHeight;
+    }
+  }
+
+  diagToggle.addEventListener('click', () => {
+    diagPanel.style.display = diagPanel.style.display === 'none' ? 'block' : 'none';
+  });
+
+  debugLog('Page loaded.');
+  window.addEventListener('error', (e) => debugLog('JS error: ' + e.message));
+
+  const storage = {
+    async get(key){
+      const v = localStorage.getItem(key);
+      return v === null ? null : { key, value: v };
+    },
+    async set(key, value){
+      localStorage.setItem(key, value);
+      return { key, value };
+    },
+    async delete(key){
+      localStorage.removeItem(key);
+      return { key, deleted: true };
+    }
+  };
+
   const STORAGE_KEY_PREFIX = 'dayflow-tasks:';
   const todayStr = () => {
     const d = new Date();
@@ -702,12 +795,12 @@
   async function saveName(name){
     userName = name.trim();
     applyGreeting();
-    try{ await window.storage.set('dayflow-name', userName, false); }catch(e){}
+    try{ await storage.set('dayflow-name', userName); }catch(e){}
   }
 
   async function loadName(){
     try{
-      const res = await window.storage.get('dayflow-name', false);
+      const res = await storage.get('dayflow-name');
       if(res && res.value){
         userName = res.value;
         applyGreeting();
@@ -748,7 +841,7 @@
     taskInput.placeholder = MODES[mode].placeholder;
     timetableBox.style.display = (mode === 'student') ? 'block' : 'none';
     contentCalBox.style.display = (mode === 'creator') ? 'block' : 'none';
-    if(save !== false) window.storage.set('dayflow-mode', mode, false).catch(()=>{});
+    if(save !== false) storage.set('dayflow-mode', mode).catch(()=>{});
   }
 
   modeRow.querySelectorAll('.mode-pill').forEach(p => {
@@ -757,7 +850,7 @@
 
   async function loadMode(){
     try{
-      const res = await window.storage.get('dayflow-mode', false);
+      const res = await storage.get('dayflow-mode');
       if(res && res.value && MODES[res.value]) { setMode(res.value, false); return; }
     }catch(e){}
     setMode('personal', false);
@@ -852,7 +945,7 @@
   initSpeech();
   async function loadTasks(){
     try{
-      const res = await window.storage.get(storageKey, false);
+      const res = await storage.get(storageKey);
       if(res && res.value){
         const parsed = JSON.parse(res.value);
         tasks = parsed.map(t => ({...t, time: new Date(t.time)}));
@@ -862,7 +955,7 @@
   }
   async function saveTasks(){
     try{
-      await window.storage.set(storageKey, JSON.stringify(tasks), false);
+      await storage.set(storageKey, JSON.stringify(tasks));
     }catch(e){ console.error('Could not save tasks', e); }
   }
 
@@ -980,8 +1073,10 @@
       if(ampm === 'am' && hour === 12) hour = 0;
       if(!ampm && hour < 8) hour += 12;
 
-      let subject = line.replace(dayMatch[0], '').replace(timeMatch[0], '');
-      subject = subject.replace(/^[\s,:-]+|[\s,:-]+$/g, '').trim();
+      let subject = line.replace(dayMatch[0], '');
+      subject = subject.replace(/\b\d{1,2}(:\d{2})?\s*(am|pm)?\s*(-|–|to)\s*\d{1,2}(:\d{2})?\s*(am|pm)?\b/gi, '');
+      subject = subject.replace(/\b\d{1,2}(:\d{2})?\s*(am|pm)\b/gi, '');
+      subject = subject.replace(/^[\s,:\-–]+|[\s,:\-–]+$/g, '').trim();
       if(!subject) subject = 'Class';
       subject = subject.charAt(0).toUpperCase() + subject.slice(1);
 
@@ -1068,8 +1163,9 @@
       let label = line;
       if(dayMatch) label = label.replace(dayMatch[0], '');
       if(dateMatch) label = label.replace(dateMatch[0], '');
-      if(timeMatch) label = label.replace(timeMatch[0], '');
-      label = label.replace(/^[\s,:-]+|[\s,:-]+$/g, '').trim();
+      label = label.replace(/\b\d{1,2}(:\d{2})?\s*(am|pm)?\s*(-|–|to)\s*\d{1,2}(:\d{2})?\s*(am|pm)?\b/gi, ''); // time ranges like "3:07 AM - 4:00 AM"
+      label = label.replace(/\b\d{1,2}(:\d{2})?\s*(am|pm)\b/gi, ''); // any remaining single times
+      label = label.replace(/^[\s,:\-–]+|[\s,:\-–]+$/g, '').trim();
       if(!label) label = 'Content task';
       label = label.charAt(0).toUpperCase() + label.slice(1);
 
@@ -1259,30 +1355,52 @@
 
   // ---------- OneSignal (background push, works even when app is closed) ----------
   let oneSignalSubscriptionId = null;
+  let oneSignalRef = null;
+  let resolveOneSignalReady;
+  const oneSignalReady = new Promise((res) => { resolveOneSignalReady = res; });
   window.OneSignalDeferred = window.OneSignalDeferred || [];
+  debugLog('Waiting for OneSignal SDK to load...');
 
   OneSignalDeferred.push(async function(OneSignal){
-    await OneSignal.init({
-      appId: 'c71df04d-deb1-45fa-bf71-99c642847216',
-      serviceWorkerPath: 'onesignal/OneSignalSDKWorker.js',
-      serviceWorkerParam: { scope: '/onesignal/' }
-    });
+    debugLog('OneSignal script loaded. Initializing...');
+    oneSignalRef = OneSignal;
+    try{
+      await OneSignal.init({
+        appId: 'c71df04d-deb1-45fa-bf71-99c642847216',
+        serviceWorkerPath: 'onesignal/OneSignalSDKWorker.js',
+        serviceWorkerParam: { scope: '/onesignal/' }
+      });
+      debugLog('OneSignal.init() succeeded.');
+    }catch(e){
+      debugLog('OneSignal.init() FAILED: ' + e.message);
+    }
 
     function captureSubscriptionId(){
       const id = OneSignal.User.PushSubscription.id;
+      const optedIn = OneSignal.User.PushSubscription.optedIn;
+      debugLog(`Subscription check — id: ${id || 'none yet'}, optedIn: ${optedIn}`);
       if(id){
         oneSignalSubscriptionId = id;
-        window.storage.set('dayflow-onesignal-id', id, false).catch(()=>{});
+        storage.set('dayflow-onesignal-id', id).catch(()=>{});
       }
     }
     captureSubscriptionId();
     OneSignal.User.PushSubscription.addEventListener('change', captureSubscriptionId);
+    resolveOneSignalReady();
   });
+
+  // if the SDK script fails to load entirely (blocked, network issue), say so after a timeout
+  setTimeout(() => {
+    if(!oneSignalRef) debugLog('OneSignal SDK never became available after 6s — script may be blocked or failed to load.');
+  }, 6000);
 
   async function loadStoredSubscriptionId(){
     try{
-      const res = await window.storage.get('dayflow-onesignal-id', false);
-      if(res && res.value) oneSignalSubscriptionId = res.value;
+      const res = await storage.get('dayflow-onesignal-id');
+      if(res && res.value){
+        oneSignalSubscriptionId = res.value;
+        debugLog('Loaded saved subscription id from storage: ' + res.value);
+      }
     }catch(e){}
   }
 
@@ -1297,11 +1415,18 @@
   }
 
   async function scheduleServerReminder(task){
-    if(!oneSignalSubscriptionId) return; // no push subscription yet — falls back to in-app-only reminders
+    if(!oneSignalSubscriptionId){
+      debugLog('Skipped scheduling "' + task.text + '" — no subscription id yet.');
+      return;
+    }
     const time = new Date(task.time);
-    if(time <= new Date()) return; // don't schedule things already in the past
+    if(time <= new Date()){
+      debugLog('Skipped scheduling "' + task.text + '" — time is in the past.');
+      return;
+    }
+    debugLog(`Scheduling push for "${task.text}" at ${toOneSignalDate(time)}...`);
     try{
-      await fetch('/.netlify/functions/schedule-notification', {
+      const res = await fetch('/.netlify/functions/schedule-notification', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1310,27 +1435,59 @@
           sendAfter: toOneSignalDate(time)
         })
       });
-    }catch(e){ /* silently skip — in-app reminders still work as a fallback while the tab is open */ }
+      const body = await res.text();
+      debugLog(`Function responded (${res.status}): ${body}`);
+    }catch(e){
+      debugLog('Fetch to schedule-notification FAILED: ' + e.message);
+    }
   }
 
+  testPushBtn.addEventListener('click', () => {
+    const t = new Date(Date.now() + 20000);
+    debugLog('Manual test push requested for ' + t.toLocaleTimeString());
+    scheduleServerReminder({ text: 'This is your test notification', time: t });
+  });
+
   async function enableAlerts(){
+    debugLog('Turn on tapped. Waiting for OneSignal readiness...');
     try{
-      if('Notification' in window && Notification.permission !== 'granted'){
-        await Notification.requestPermission();
-      }
+      await Promise.race([oneSignalReady, new Promise((r) => setTimeout(r, 4000))]);
     }catch(e){}
+
+    let subscribedViaOneSignal = false;
+    try{
+      if(oneSignalRef && oneSignalRef.Notifications){
+        debugLog('Requesting permission via OneSignal SDK...');
+        await oneSignalRef.Notifications.requestPermission();
+        subscribedViaOneSignal = true;
+        debugLog('OneSignal permission request completed. Browser permission is now: ' + Notification.permission);
+      }else{
+        debugLog('OneSignal not ready yet — will use plain browser permission as fallback.');
+      }
+    }catch(e){
+      debugLog('OneSignal.Notifications.requestPermission() FAILED: ' + e.message);
+    }
+
+    if(!subscribedViaOneSignal){
+      // OneSignal wasn't available (blocked script, slow network, etc.) — fall back to
+      // plain browser permission so local, in-app reminders can still show a notification
+      try{
+        if('Notification' in window && Notification.permission !== 'granted'){
+          await Notification.requestPermission();
+        }
+      }catch(e){}
+    }
+
     try{
       if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       audioCtx.resume && audioCtx.resume();
     }catch(e){}
-    try{
-      if(window.OneSignal && OneSignal.Notifications && !OneSignal.Notifications.permission){
-        await OneSignal.Notifications.requestPermission();
-      }
-    }catch(e){}
+
     alertsEnabled = true;
     alertsBar.classList.add('enabled');
-    alertsText.textContent = 'Reminders are on';
+    alertsText.textContent = subscribedViaOneSignal
+      ? 'Reminders are on — you\'ll get them even outside the app'
+      : 'Reminders are on (only while the app is open)';
     alertsBtn.textContent = 'On';
   }
 
